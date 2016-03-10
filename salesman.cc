@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -95,10 +96,99 @@ class Stack{
         }
 };
 
+/*
+    Represents all of the data that a salesman collects from
+    each call
+*/
+class Card{
+    
+    private:
+        int received;
+        int x;
+        int y;
+        int duration;
+    
+    public:
+        /*
+            Default constructor for a Card, compiler dislikes no default
+        */
+        Card(){
+            received = 0;
+            x = 0;
+            y = 0;
+            duration = 0;
+        }
+    
+        /*
+            Custom constructor intializes elements
+        */
+        Card(int _received, int _x, int _y, int _duration){
+            received = _received;
+            x = _x;
+            y = _y;
+            duration = _duration;
+        }
+    
+        /*
+            Getter for received
+        */
+        int get_received(){
+            return received;
+        }
+    
+        /*
+            Getter for x
+        */
+        int get_x(){
+            return x;
+        }
+    
+        /*
+            Getter for y
+        */
+        int get_y(){
+            return y;
+        }
+    
+        /*
+            Getter for duration
+        */
+        int get_duration(){
+            return duration;
+        }
+    
+        /*
+            Overloads the output operator, outputs each element of a Card - space 
+            seperated
+        */
+        friend ostream& operator<<(ostream& os, const Card& s){
+            os << s.received << " " << s.x << " " << s.y << " " << s.duration;
+            return os;
+        }
+        
+};
+
 int main(int argc, char* argv[]){
-    Stack<int> s;
-    s.push(1);
-    s.push(2);
-    s.push(3);
+    
+    Stack<Card> s;
+    int received;
+    int x;
+    int y;
+    int duration;
+    int currentx = 0;
+    int currenty = 0;
+    
+    while(cin >> received && cin >> x && cin >> y && cin >> duration){
+        Card c(received, x, y, duration);
+        s.push(c);
+        //Card first = s.top();
+        //s.pop();
+        //Card second = s.top();
+        //s.pop();
+        //int distanceone = pow((currentx - first.get_x()), 2) + pow((currenty - first.get_y()), 2);
+        //int distancetwo = pow((currentx - second.get_x()), 2) + pow((currenty - second.get_y()), 2);
+        
+    }
+    
     cout << s;
 }
