@@ -172,24 +172,28 @@ class Card{
 int main(int argc, char* argv[]){
     
     Stack<Card> s;
+    
     int received;
     int x;
     int y;
     int duration;
+    
     int currentx = 0;
     int currenty = 0;
+    int time = 0;
+    
     
     while(cin >> received && cin >> x && cin >> y && cin >> duration){
-        Card c(received, x, y, duration);
-        s.push(c);
-        //Card first = s.top();
-        //s.pop();
-        //Card second = s.top();
-        //s.pop();
-        //int distanceone = pow((currentx - first.get_x()), 2) + pow((currenty - first.get_y()), 2);
-        //int distancetwo = pow((currentx - second.get_x()), 2) + pow((currenty - second.get_y()), 2);
         
+        for (; true; time++){
+            if (time == received){
+                Card c(received, x, y, duration);
+                cout << time << c << endl;
+                s.push(c);
+                break;
+            }else{
+                cout << time << endl;
+            }
+        }       
     }
-    
-    cout << s;
 }
