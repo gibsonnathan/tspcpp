@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <iomanip> 
 
 using namespace std;
 
@@ -162,7 +163,7 @@ class Card{
             seperated
         */
         friend ostream& operator<<(ostream& os, const Card& s){
-            os << s.received << " " << s.x << " " << s.y << " " << s.duration;
+            os << setw(10) << s.received << " " << setw(10) << s.x << " " << setw(10) << s.y << " " << setw(10) << s.duration;
             return os;
         }
         
