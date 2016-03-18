@@ -2,7 +2,8 @@
     Nathan Gibson
     March 9, 2016
     
-    
+    Version of the traveling salesman that uses a stack to manage
+    candidates to visit. 
 */
 
 #include <iostream>
@@ -17,7 +18,7 @@ const int STACK_MAX_SIZE = 32;
 const int EMPTY_STACK_SIZE = -1;
 
 /* 
-    Class that implements the stack abstract data type
+    Class that implements the stack abstract data type                         
 */
 template <class T>
 class Stack{
@@ -35,8 +36,7 @@ class Stack{
         }
         
         /*
-            Move the top_pointer down to remove the top stack entry,
-            throws a runtime_error if the stack is empty
+            Move the top_pointer down to remove the top stack entry
         */
         void pop(){
             if(!empty()){
@@ -47,8 +47,7 @@ class Stack{
         }
     
         /*
-            Puts an element on the top of the stack, throws a runtime_error
-            if the stack is too full
+            Puts an element on the top of the stack
         */
         void push(T t){
             if(!full()){
@@ -59,15 +58,10 @@ class Stack{
         }
     
         /*
-            Returns the element on the top of the stack, throws a runtime_error
-            if the stack is empty
+            Returns the element on the top of the stack
         */
         T top(){
-            if(!empty()){
-                return stack[top_pointer];    
-            }else{
-                throw runtime_error("Empty Stack");
-            }
+            return stack[top_pointer];    
         }
         
         /*
@@ -159,41 +153,161 @@ class Card{
         }
     
         /*
-            Overloads the output operator, outputs each element of a Card - space 
-            seperated
+            Overloads the output operator, outputs each element of a Card 
+            - space seperated
         */
         friend ostream& operator<<(ostream& os, const Card& s){
-            os << setw(10) << s.received << " " << setw(10) << s.x << " " << setw(10) << s.y << " " << setw(10) << s.duration;
+            os << setw(10) << s.received << setw(10) << s.x <<
+                setw(10) << s.y << setw(10) << s.duration;
             return os;
         }
         
 };
 
+Card get_next(Stack<Card>& s, int currentx, int currenty);
+void wait(int& time_in_bookstore);
+float distance(int x1, int x2, int y1, int y2);
+
 int main(int argc, char* argv[]){
     
     Stack<Card> s;
     
+    //data representing cards
     int received;
     int x;
     int y;
     int duration;
     
+    //manage simulation events
     int currentx = 0;
     int currenty = 0;
     int time = 0;
+    int next_meet = 0;
     
+    //statistic tracking variables 
+    int time_in_bookstore = 0;
+    int total_time = 0;
+    int total_number_calls = 0;
+    int time_on_road = 0;
+    int time_meeting_clients = 0;
+    int client_waiting_average = 0;
+    int client_waiting_max = 0;
     
-    while(cin >> received && cin >> x && cin >> y && cin >> duration){
-        
-        for (; true; time++){
-            if (time == received){
-                Card c(received, x, y, duration);
-                cout << time << c << endl;
-                s.push(c);
-                break;
+    while((cin >> received && cin >> x &&
+           cin >> y && cin >> duration) || (!s.empty())){
+    
+        while(true){
+            
+            time++; 
+
+            //it is time to go to a new candidate, if there are currently
+            //none to visit we wait
+            if(next_meet == 0){
+                try{
+                    Card next = get_next(s, currentx, currenty);
+                    int distance_traveled = (int) distance(currentx, currenty, 
+                                                   next.get_x(), next.get_y());
+                    
+                    
+                    time_on_road += distance_traveled;
+                    currentx = next.get_x();
+                    currenty = next.get_y();
+                    next_meet = next.get_duration();
+                    time_meeting_clients += next_meet;
+                 
+                    
+                    
+                }catch(...){
+                    wait(time_in_bookstore);
+                }
             }else{
-                cout << time << endl;
+                next_meet--;   
             }
-        }       
+            
+            //we got a call, need to break back to the main loop 
+            //to wait for the next call
+            if(time == received){
+                total_number_calls++;
+                s.push(Card(received, x, y, duration));
+                break;
+            }
+            
+            //if there are no more places to visit and we are done at
+            //the current location we are done completely
+            if(cin.peek() == EOF && s.empty() && next_meet == 0){
+                total_time = time;
+                break;
+            }
+       }
     }
+    
+    cout << "It took " << total_time << " minutes for the salesman to process " 
+        << total_number_calls << " calls. " << endl;
+    
+    cout << "The salesman spent " << time_in_bookstore 
+        << " minutes in bookstores, " 
+        << time_on_road << " minutes on the road, and" << endl;
+    
+    cout << time_meeting_clients << " minutes in meetings with clients." 
+        << endl;
+    
+    cout << "Clients spent an average of " << client_waiting_average 
+        << " minutes waiting for the salesperson to see them." << endl;
+    
+    cout << "The maximum amount of time any client spent waiting was " 
+        << client_waiting_max << "." << endl;
+}
+
+/*
+    Given a stack, and a location, this function takes the
+    first two entries off the stack and determines which is the 
+    closest to the current location. The closest is returned, the
+    other is put back on the stack. If the stack is empty an 
+    exception is thrown, if there is only one card-- it is returned.
+    If they are equal distance the oldest card is returned.
+*/
+Card get_next(Stack<Card>& s, int currentx, int currenty){
+    
+    if(s.empty()){
+        throw runtime_error("No cards");
+    }
+    
+    Card first = s.top();
+    s.pop();
+    
+    if(s.empty()){
+        return first;
+    }
+    
+    Card second = s.top();
+    s.pop();
+    
+    float first_dist = distance(currentx, first.get_x(),
+                                currenty, first.get_y());
+    
+    float second_dist = distance(currentx, second.get_x(),
+                                 currenty, second.get_y());
+    
+    if(first_dist < second_dist){
+        s.push(second);
+        return first;
+    }else{
+        s.push(first);
+        return second;
+    }
+}
+
+/*
+    returns distance between two points on a 2d grid
+*/
+float distance(int x1, int y1, int x2, int y2){
+    return sqrt(pow((x2 - x1), 2) + pow((y2 - y1),2));
+}
+
+/*
+    function that has the side effect of increasing the time_in_bookstore
+    by one
+*/
+void wait(int& time_in_bookstore){
+    time_in_bookstore++;
 }
