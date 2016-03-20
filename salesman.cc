@@ -212,6 +212,18 @@ int main(int argc, char* argv[]){
                                                next.get_x(), next.get_y());
                 
                 
+                for(int i = 0; i < distance_traveled; i++){
+                    //if a call is received, add it to the places to visit
+                    Card call = input.top();
+                    if(call.get_received() == time){
+                        cout << " call received ";
+                        total_number_calls++;
+                        places_to_visit.push(call);
+                        input.pop();
+                    }
+                    time++;
+                }
+                
                 time_on_road += distance_traveled;
                 currentx = next.get_x();
                 currenty = next.get_y();
