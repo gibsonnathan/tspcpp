@@ -167,23 +167,19 @@ class Card{
 Card get_next(Stack<Card>& s, int currentx, int currenty);
 void wait(int& time_in_bookstore);
 float distance(int x1, int x2, int y1, int y2);
+Stack<Card> get_input();
+
 
 int main(int argc, char* argv[]){
     
-    Stack<Card> s;
-    
-    //data representing cards
-    int received;
-    int x;
-    int y;
-    int duration;
+    Stack<Card> places_to_visit;
     
     //manage simulation events
     int currentx = 0;
     int currenty = 0;
-    int time = 0;
+    int time = 1;
     int next_meet = 0;
-    
+
     //statistic tracking variables 
     int time_in_bookstore = 0;
     int total_time = 0;
@@ -193,53 +189,58 @@ int main(int argc, char* argv[]){
     int client_waiting_average = 0;
     int client_waiting_max = 0;
     
-    while((cin >> received && cin >> x &&
-           cin >> y && cin >> duration) || (!s.empty())){
-    
-        while(true){
-            
-            time++; 
+    Stack<Card> input = get_input();
 
-            //it is time to go to a new candidate, if there are currently
-            //none to visit we wait
-            if(next_meet == 0){
-                try{
-                    Card next = get_next(s, currentx, currenty);
-                    int distance_traveled = (int) distance(currentx, currenty, 
-                                                   next.get_x(), next.get_y());
-                    
-                    
-                    time_on_road += distance_traveled;
-                    currentx = next.get_x();
-                    currenty = next.get_y();
-                    next_meet = next.get_duration();
-                    time_meeting_clients += next_meet;
-                 
-                    
-                    
-                }catch(...){
-                    wait(time_in_bookstore);
-                }
-            }else{
-                next_meet--;   
+    cout << "debug output:" << endl;
+    
+    while(true){
+        
+        cout << "time: " << time << " next meet: " << next_meet;
+        
+        //if done visiting and nowhere else to go, stop
+        if(input.empty() && places_to_visit.empty() && next_meet == 0){
+            cout << " ending ";
+            break;
+        }
+        
+        //if done visiting and there are more places, get a new place
+        if(next_meet == 0){
+            try{
+                cout << " trying to get a card ";
+                Card next = get_next(places_to_visit, currentx, currenty);
+                int distance_traveled = (int) distance(currentx, currenty, 
+                                               next.get_x(), next.get_y());
+                
+                
+                time_on_road += distance_traveled;
+                currentx = next.get_x();
+                currenty = next.get_y();
+                next_meet = next.get_duration();
+                time_meeting_clients += next.get_duration();
+
+            }catch(...){
+                cout << " waiting ";
+                wait(time_in_bookstore);
             }
-            
-            //we got a call, need to break back to the main loop 
-            //to wait for the next call
-            if(time == received){
-                total_number_calls++;
-                s.push(Card(received, x, y, duration));
-                break;
-            }
-            
-            //if there are no more places to visit and we are done at
-            //the current location we are done completely
-            if(cin.peek() == EOF && s.empty() && next_meet == 0){
-                total_time = time;
-                break;
-            }
-       }
+        }else{
+            next_meet--;   
+        }
+        
+        //if a call is received, add it to the places to visit
+        Card call = input.top();
+        if(call.get_received() == time){
+            cout << " call received ";
+            total_number_calls++;
+            places_to_visit.push(call);
+            input.pop();
+        }
+        cout << endl;
+        time++;
     }
+    
+    cout << endl;
+    total_time = time;
+    
     
     cout << "It took " << total_time << " minutes for the salesman to process " 
         << total_number_calls << " calls. " << endl;
@@ -256,6 +257,28 @@ int main(int argc, char* argv[]){
     
     cout << "The maximum amount of time any client spent waiting was " 
         << client_waiting_max << "." << endl;
+        
+}
+    
+Stack<Card> get_input(){
+    Stack<Card> input;
+    Stack<Card> flipped;
+    int received;
+    int x;
+    int y;
+    int duration;
+    
+    while(cin >> received && cin >> x &&
+           cin >> y && cin >> duration){
+        input.push(Card(received, x, y, duration));
+    }
+    
+    while(!input.empty()){
+        flipped.push(input.top());
+        input.pop();
+    }
+    
+    return flipped;
 }
 
 /*
