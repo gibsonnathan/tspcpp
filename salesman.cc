@@ -166,7 +166,7 @@ class Card{
 
 Card get_next(Stack<Card>& s, int currentx, int currenty);
 void wait(int& time_in_bookstore);
-float distance(int x1, int x2, int y1, int y2);
+int distance(int x1, int x2, int y1, int y2);
 Stack<Card> get_input();
 
 
@@ -189,6 +189,8 @@ int main(int argc, char* argv[]){
     int client_waiting_average = 0;
     int client_waiting_max = 0;
     
+    bool drove = false;
+    
     Stack<Card> input = get_input();
 
     cout << "debug output:" << endl;
@@ -203,17 +205,24 @@ int main(int argc, char* argv[]){
             break;
         }
         
-        //if done visiting and there are more places, get a new place
+        //if done with a meeting, try to get a new one
         if(next_meet == 0){
+            
             try{
                 cout << " trying to get a card ";
                 Card next = get_next(places_to_visit, currentx, currenty);
-                int distance_traveled = (int) distance(currentx, currenty, 
+                
+                //figure out how far it is to the new location
+                int distance_traveled = distance(currentx, currenty, 
                                                next.get_x(), next.get_y());
                 
-                
+                drove = true;
+                cout << endl;
+                //drive to location
                 for(int i = 0; i < distance_traveled; i++){
-                    //if a call is received, add it to the places to visit
+                    cout << "time: " << time << " next meet: " << next_meet;
+                    cout << " driving ";
+                    //check for calls while traveling 
                     Card call = input.top();
                     if(call.get_received() == time){
                         cout << " call received ";
@@ -222,12 +231,21 @@ int main(int argc, char* argv[]){
                         input.pop();
                     }
                     time++;
+                    cout << endl;
                 }
                 
+                
+                //update how far we have gone
                 time_on_road += distance_traveled;
+                
+                //set location to where we traveled
                 currentx = next.get_x();
                 currenty = next.get_y();
+                
+                //meeting with a client for this duration
                 next_meet = next.get_duration();
+                
+                //update time spent meeting with clients
                 time_meeting_clients += next.get_duration();
 
             }catch(...){
@@ -235,6 +253,7 @@ int main(int argc, char* argv[]){
                 wait(time_in_bookstore);
             }
         }else{
+            //if not done with a meeting, decrement time spent in the current meeting
             next_meet--;   
         }
         
@@ -246,8 +265,13 @@ int main(int argc, char* argv[]){
             places_to_visit.push(call);
             input.pop();
         }
-        cout << endl;
-        time++;
+        
+        if(!drove){
+            cout << endl;
+            time++;    
+        }
+        drove = false;
+        
     }
     
     cout << endl;
@@ -335,8 +359,8 @@ Card get_next(Stack<Card>& s, int currentx, int currenty){
 /*
     returns distance between two points on a 2d grid
 */
-float distance(int x1, int y1, int x2, int y2){
-    return sqrt(pow((x2 - x1), 2) + pow((y2 - y1),2));
+int distance(int x1, int y1, int x2, int y2){
+    return (int)sqrt(pow((x2 - x1), 2) + pow((y2 - y1),2));
 }
 
 /*
