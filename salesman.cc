@@ -5,7 +5,6 @@
     Version of the traveling salesman that uses a stack to manage
     candidates to visit. 
 */
-
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -103,7 +102,6 @@ class Card{
         int y;
         int duration;
         int picked_up;
-    
     public:
         /*
             Default constructor for a Card, compiler dislikes no default
@@ -197,10 +195,7 @@ void wait(int& time_in_bookstore);
 int distance(int x1, int x2, int y1, int y2);
 Stack<Card> get_input();
 
-
 int main(int argc, char* argv[]){
-    
-    Stack<Card> places_to_visit;
     
     //manage simulation events
     int currentx = 0;
@@ -210,27 +205,23 @@ int main(int argc, char* argv[]){
 
     //statistic tracking variables 
     int time_in_bookstore = 0;
-    int total_time = 0;
     int total_number_calls = 0;
     int time_on_road = 0;
     int time_meeting_clients = 0;
     
-    
-    bool drove = false;
-    
+    //places to go, places we haven't been, places we've already been
+    Stack<Card> places_to_visit;
     Stack<Card> input = get_input();
     Stack<Card> used;
     
     while(true){
-        
-        //cout << "time: " << time << " next meet: " << next_meet;
-        
+            
         //if done visiting and nowhere else to go, stop
         if(input.empty() && places_to_visit.empty() && next_meet == 0){
             break;
         }
         
-        //if done with a meeting, try to get a new one
+        //if done with a meeting, try to get a new one -- if cannot, wait
         if(next_meet == 0){
             
             try{
@@ -242,9 +233,8 @@ int main(int argc, char* argv[]){
                 int distance_traveled = distance(currentx, currenty, 
                                                next.get_x(), next.get_y());
                 
-                drove = true;
                 //drive to location
-                for(int i = 0; i < distance_traveled; i++){
+                for(int i = 0; i < distance_traveled - 1; i++){
                     //check for calls while traveling 
                     Card call = input.top();
                     if(call.get_received() == time){
@@ -254,7 +244,6 @@ int main(int argc, char* argv[]){
                     }
                     time++;
                 }
-                
                 
                 //update how far we have gone
                 time_on_road += distance_traveled;
@@ -285,15 +274,12 @@ int main(int argc, char* argv[]){
             input.pop();
         }
         
-        if(!drove){
-            time++; 
-        }
-        drove = false;
+        
+        time++; 
         
     }
     
     //calculate wait time statistics
-    int client_waiting_average = 0;
     int client_waiting_max = 0;
     int total = 0;
     
@@ -306,11 +292,10 @@ int main(int argc, char* argv[]){
         }
     }
     
-    client_waiting_average = (int) total / total_number_calls;
-    total_time = time;
+    int client_waiting_average = total / total_number_calls;
     
-    
-    cout << "It took " << total_time << " minutes for the salesman to process " 
+    //output
+    cout << "It took " << time << " minutes for the salesman to process " 
         << total_number_calls << " calls. " << endl;
     
     cout << "The salesman spent " << time_in_bookstore 
@@ -327,7 +312,11 @@ int main(int argc, char* argv[]){
         << client_waiting_max << "." << endl;
         
 }
-    
+
+/*
+    Reads input into a stack, then reverses it so it appears
+    in the original order when being popped off
+*/    
 Stack<Card> get_input(){
     Stack<Card> input;
     Stack<Card> flipped;
@@ -373,10 +362,10 @@ Card get_next(Stack<Card>& s, int currentx, int currenty){
     Card second = s.top();
     s.pop();
     
-    float first_dist = distance(currentx, first.get_x(),
+    int first_dist = distance(currentx, first.get_x(),
                                 currenty, first.get_y());
     
-    float second_dist = distance(currentx, second.get_x(),
+    int second_dist = distance(currentx, second.get_x(),
                                  currenty, second.get_y());
     
     if(first_dist < second_dist){
@@ -392,7 +381,7 @@ Card get_next(Stack<Card>& s, int currentx, int currenty){
     returns distance between two points on a 2d grid
 */
 int distance(int x1, int y1, int x2, int y2){
-    return (int)sqrt(pow((x2 - x1), 2) + pow((y2 - y1),2));
+    return sqrt(pow((x2 - x1), 2) + pow((y2 - y1),2));
 }
 
 /*
