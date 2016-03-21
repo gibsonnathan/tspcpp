@@ -102,6 +102,7 @@ class Card{
         int x;
         int y;
         int duration;
+        int picked_up;
     
     public:
         /*
@@ -112,6 +113,7 @@ class Card{
             x = 0;
             y = 0;
             duration = 0;
+            picked_up = -1;
         }
     
         /*
@@ -122,6 +124,7 @@ class Card{
             x = _x;
             y = _y;
             duration = _duration;
+            picked_up = -1;
         }
     
         /*
@@ -153,12 +156,37 @@ class Card{
         }
     
         /*
+            Setter for picked_up
+        */
+        void set_picked_up(int time){
+            picked_up = time;
+        }
+        
+        /*
+            Getter for picked_up
+        */
+        int get_picked_up(){
+           return picked_up;
+        }
+    
+        /*
+            Returns -1 as an error code if not set
+        */
+        int get_wait_time(){
+            if(picked_up == -1){
+                return -1;
+            }else{
+                return picked_up - received;
+            }
+        }
+    
+        /*
             Overloads the output operator, outputs each element of a Card 
             - space seperated
         */
         friend ostream& operator<<(ostream& os, const Card& s){
             os << setw(10) << s.received << setw(10) << s.x <<
-                setw(10) << s.y << setw(10) << s.duration;
+                setw(10) << s.y << setw(10) << s.duration << setw(10) << s.picked_up;
             return os;
         }
         
@@ -186,22 +214,19 @@ int main(int argc, char* argv[]){
     int total_number_calls = 0;
     int time_on_road = 0;
     int time_meeting_clients = 0;
-    int client_waiting_average = 0;
-    int client_waiting_max = 0;
+    
     
     bool drove = false;
     
     Stack<Card> input = get_input();
-
-    cout << "debug output:" << endl;
+    Stack<Card> used;
     
     while(true){
         
-        cout << "time: " << time << " next meet: " << next_meet;
+        //cout << "time: " << time << " next meet: " << next_meet;
         
         //if done visiting and nowhere else to go, stop
         if(input.empty() && places_to_visit.empty() && next_meet == 0){
-            cout << " ending ";
             break;
         }
         
@@ -209,29 +234,25 @@ int main(int argc, char* argv[]){
         if(next_meet == 0){
             
             try{
-                cout << " trying to get a card ";
                 Card next = get_next(places_to_visit, currentx, currenty);
+                next.set_picked_up(time);
+                used.push(next);
                 
                 //figure out how far it is to the new location
                 int distance_traveled = distance(currentx, currenty, 
                                                next.get_x(), next.get_y());
                 
                 drove = true;
-                cout << endl;
                 //drive to location
                 for(int i = 0; i < distance_traveled; i++){
-                    cout << "time: " << time << " next meet: " << next_meet;
-                    cout << " driving ";
                     //check for calls while traveling 
                     Card call = input.top();
                     if(call.get_received() == time){
-                        cout << " call received ";
                         total_number_calls++;
                         places_to_visit.push(call);
                         input.pop();
                     }
                     time++;
-                    cout << endl;
                 }
                 
                 
@@ -249,7 +270,6 @@ int main(int argc, char* argv[]){
                 time_meeting_clients += next.get_duration();
 
             }catch(...){
-                cout << " waiting ";
                 wait(time_in_bookstore);
             }
         }else{
@@ -260,21 +280,33 @@ int main(int argc, char* argv[]){
         //if a call is received, add it to the places to visit
         Card call = input.top();
         if(call.get_received() == time){
-            cout << " call received ";
             total_number_calls++;
             places_to_visit.push(call);
             input.pop();
         }
         
         if(!drove){
-            cout << endl;
-            time++;    
+            time++; 
         }
         drove = false;
         
     }
     
-    cout << endl;
+    //calculate wait time statistics
+    int client_waiting_average = 0;
+    int client_waiting_max = 0;
+    int total = 0;
+    
+    while(!used.empty()){
+        int current = used.top().get_wait_time();
+        total += current;
+        used.pop();
+        if(current > client_waiting_max){
+            client_waiting_max = current;
+        }
+    }
+    
+    client_waiting_average = (int) total / total_number_calls;
     total_time = time;
     
     
