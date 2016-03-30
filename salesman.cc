@@ -226,8 +226,6 @@ int main(int argc, char* argv[]){
             
             try{
                 Card next = get_next(places_to_visit, currentx, currenty);
-                next.set_picked_up(time);
-                used.push(next);
                 
                 //figure out how far it is to the new location
                 int distance_traveled = distance(currentx, currenty, 
@@ -244,6 +242,9 @@ int main(int argc, char* argv[]){
                     }
                     time++;
                 }
+
+                next.set_picked_up(time);
+                used.push(next);
                 
                 //update how far we have gone
                 time_on_road += distance_traveled;
