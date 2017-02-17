@@ -275,9 +275,7 @@ int main(int argc, char* argv[]){
             input.pop();
         }
         
-        
         time++; 
-        
     }
     
     //calculate wait time statistics
